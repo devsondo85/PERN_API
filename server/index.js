@@ -1,10 +1,12 @@
 const express = require('express')
+const cors = require('cors')
 const app = express()
 const port = 9001
 const db = require('./queries')
 const path = require('path')
 
 // Middleware 
+app.use(cors()) // Enable CORS for all routes
 app.use(express.json()) // Parse JSON request bodies
 
 //CRUD - API Routes (must come BEFORE static files)
