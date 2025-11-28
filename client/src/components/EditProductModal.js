@@ -117,7 +117,16 @@ const EditProductModal = ({ product, isOpen, onClose, onProductUpdated }) => {
         setSuccess(false);
       }, 1000);
     } catch (err) {
-      setError(err.message || 'Failed to update product. Please try again.');
+      // Better error messages
+      if (err.message.includes('Network') || err.message.includes('fetch')) {
+        setError('Unable to connect to server. Please check your internet connection and try again.');
+      } else if (err.message.includes('400') || err.message.includes('validation')) {
+        setError(err.message || 'Please check your input and try again.');
+      } else if (err.message.includes('404')) {
+        setError('Product not found. It may have been deleted.');
+      } else {
+        setError(err.message || 'Failed to update product. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

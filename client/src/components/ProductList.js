@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { getProducts, deleteProduct, getCategories } from '../services/api';
 import EditProductModal from './EditProductModal';
 
-const ProductList = ({ onProductAdded, onProductUpdated }) => {
+const ProductList = ({ onProductAdded, onProductUpdated, onProductsLoaded }) => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,19 +19,41 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
 
   // Fetch products and categories on component mount and when products are added/updated
   useEffect(() => {
-    fetchProducts();
-    fetchCategories();
-  }, [onProductAdded, onProductUpdated, refreshKey]);
+    let isMounted = true;
+    
+    const loadData = async () => {
+      try {
+        await fetchProducts();
+        if (isMounted) {
+          await fetchCategories();
+        }
+      } catch (err) {
+        console.error('Error loading data:', err);
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getProducts();
-      setProducts(data);
+      console.log('Products loaded:', data); // Debug log
+      setProducts(data || []);
+      // Notify parent component about loaded products
+      if (onProductsLoaded) {
+        onProductsLoaded(data || []);
+      }
     } catch (err) {
-      setError('Failed to load products. Please try again.');
       console.error('Error fetching products:', err);
+      setError(`Failed to load products: ${err.message}. Please check if the server is running.`);
     } finally {
       setLoading(false);
     }
@@ -55,7 +77,11 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
         setRefreshKey(prev => prev + 1);
         fetchProducts();
       } catch (err) {
-        alert('Failed to delete product. Please try again.');
+        // Better error handling
+        const errorMsg = err.message.includes('Network') || err.message.includes('fetch')
+          ? 'Unable to connect to server. Please check your internet connection.'
+          : err.message || 'Failed to delete product. Please try again.';
+        alert(`Error: ${errorMsg}`);
         console.error('Error deleting product:', err);
       }
     }
@@ -153,7 +179,11 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
   if (loading) {
     return (
       <div className="loading-container">
+        <div className="loading-spinner"></div>
         <p>Loading products...</p>
+        <p style={{fontSize: '0.9rem', color: '#666', marginTop: '10px'}}>
+          If this takes too long, check the browser console (F12) for errors
+        </p>
       </div>
     );
   }
@@ -161,29 +191,47 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
   if (error) {
     return (
       <div className="error-container">
+        <div className="error-icon">⚠️</div>
+        <h3>Oops! Something went wrong</h3>
         <p className="error-message">{error}</p>
-        <button onClick={fetchProducts}>Retry</button>
+        <div className="error-actions">
+          <button className="retry-btn" onClick={fetchProducts}>
+            🔄 Retry
+          </button>
+          <button className="refresh-btn" onClick={() => window.location.reload()}>
+            🔃 Refresh Page
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="product-list">
+    <div className="product-list" id="product-inventory">
       <div className="product-list-header">
-        <h2>Product Inventory</h2>
+        <h2>📦 Product Inventory</h2>
+        <p className="scroll-hint">↓ Scroll down to see search & filter options ↓</p>
         <div className="search-filter-bar">
-          <div className="search-group">
+          <div className="search-filter-header">
+            <span className="search-filter-title">🔍 Search & Filter Products</span>
+          </div>
+          <div className="search-filter-controls">
+            <div className="search-group">
+            <label htmlFor="search-input" className="search-label">🔍 Search</label>
             <input
+              id="search-input"
               type="text"
               className="search-input"
-              placeholder="Search by name..."
+              placeholder="Search by product name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
           <div className="filter-group">
+            <label htmlFor="category-filter" className="filter-label">📁 Filter</label>
             <select
+              id="category-filter"
               className="category-filter"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -218,11 +266,12 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
             </button>
           </div>
 
-          {(searchTerm || selectedCategory) && (
-            <button className="clear-filters-btn" onClick={clearFilters}>
-              Clear Filters
-            </button>
-          )}
+            {(searchTerm || selectedCategory) && (
+              <button className="clear-filters-btn" onClick={clearFilters}>
+                Clear Filters
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -257,18 +306,32 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
               </tr>
             </thead>
             <tbody>
-              {filteredAndSortedProducts.map((product) => (
-              <tr key={product.id}>
-                <td>{product.id}</td>
-                <td>{product.name}</td>
-                <td>{product.description || 'N/A'}</td>
-                <td>${parseFloat(product.price).toFixed(2)}</td>
-                <td className={product.quantity <= product.low_stock_threshold ? 'low-stock' : ''}>
-                  {product.quantity}
+              {filteredAndSortedProducts.map((product) => {
+                const isLowStock = product.quantity <= product.low_stock_threshold;
+                return (
+              <tr key={product.id} className={isLowStock ? 'low-stock-row' : ''}>
+                <td data-label="ID">{product.id}</td>
+                <td data-label="Name">
+                  <div className="product-name-cell">
+                    {product.name}
+                    {isLowStock && <span className="low-stock-indicator" title="Low Stock">⚠️</span>}
+                  </div>
                 </td>
-                <td>{product.low_stock_threshold}</td>
-                <td>{product.category_name || 'Uncategorized'}</td>
-                <td>
+                <td data-label="Description">{product.description || 'N/A'}</td>
+                <td data-label="Price">${parseFloat(product.price).toFixed(2)}</td>
+                <td data-label="Quantity">
+                  <div className="quantity-cell">
+                    <span className={product.quantity <= product.low_stock_threshold ? 'low-stock' : 'normal-stock'}>
+                      {product.quantity}
+                    </span>
+                    {product.quantity <= product.low_stock_threshold && (
+                      <span className="low-stock-badge" title="Low Stock">⚠️</span>
+                    )}
+                  </div>
+                </td>
+                <td data-label="Low Stock Threshold">{product.low_stock_threshold}</td>
+                <td data-label="Category">{product.category_name || 'Uncategorized'}</td>
+                <td data-label="Actions">
                   <div className="action-buttons">
                     <button 
                       className="edit-btn"
@@ -285,7 +348,8 @@ const ProductList = ({ onProductAdded, onProductUpdated }) => {
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
         </>

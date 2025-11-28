@@ -26,6 +26,8 @@ const AddProductForm = ({ onProductAdded }) => {
       setCategories(data);
     } catch (err) {
       console.error('Error fetching categories:', err);
+      // Categories are optional, so we don't show error to user
+      // Form will still work without categories
     }
   };
 
@@ -102,7 +104,14 @@ const AddProductForm = ({ onProductAdded }) => {
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err.message || 'Failed to create product. Please try again.');
+      // Better error messages
+      if (err.message.includes('Network') || err.message.includes('fetch')) {
+        setError('Unable to connect to server. Please check your internet connection and try again.');
+      } else if (err.message.includes('400') || err.message.includes('validation')) {
+        setError(err.message || 'Please check your input and try again.');
+      } else {
+        setError(err.message || 'Failed to create product. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
