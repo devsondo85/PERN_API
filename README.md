@@ -250,19 +250,37 @@ const pool = new POOL({
 
 ## 🚢 Deployment
 
-### Backend Deployment
-1. Set up PostgreSQL database on hosting service
-2. Update database credentials
-3. Deploy to services like Heroku, Railway, or Render
-4. Set environment variables
+### Quick Start
 
-### Frontend Deployment
-1. Build the React app: `npm run build`
-2. Deploy `client/build` folder to services like:
-   - Netlify
-   - Vercel
-   - GitHub Pages
-3. Update `API_BASE_URL` in `client/src/services/api.js` to production URL
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Backend Deployment Options
+- **Heroku**: Free tier available, easy PostgreSQL setup
+- **Railway**: All-in-one solution, automatic deployments
+- **Render**: Free tier, simple setup
+
+### Frontend Deployment Options
+- **Vercel**: Optimized for React, free tier
+- **Netlify**: Easy GitHub integration, free tier
+- **Render**: Can deploy alongside backend
+
+### Environment Variables
+
+Before deploying, ensure you have:
+- Database connection credentials
+- Backend URL for frontend configuration
+
+See `.env.example` for required variables (create `.env` file locally for development).
+
+### Deployment Steps Summary
+
+1. **Prepare Code** ✅ (Already done - environment variables configured)
+2. **Deploy Backend** - Choose platform and follow their guide
+3. **Set Up Database** - Run `server/schema.sql` on production database
+4. **Deploy Frontend** - Update `REACT_APP_API_URL` and deploy
+5. **Test** - Verify everything works in production
+
+For step-by-step instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 📄 License
 

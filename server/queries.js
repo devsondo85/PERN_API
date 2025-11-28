@@ -10,12 +10,13 @@
 // Connect to PostgreSQL using the node-postgres package
 const POOL = require('pg').Pool 
 
+// Database configuration with environment variable support for deployment
 const pool = new POOL({
-    user: 'me',
-    host: 'localhost',
-    database: 'inventory_app',
-    password: 'password',
-    port: 5432,
+    user: process.env.DB_USER || 'me',
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_NAME || 'inventory_app',
+    password: process.env.DB_PASSWORD || 'password',
+    port: process.env.DB_PORT || 5432,
 })
 
 /**

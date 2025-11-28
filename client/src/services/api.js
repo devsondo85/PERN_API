@@ -8,8 +8,8 @@
  */
 
 // Base URL for the backend API
-// Update this to your production API URL when deploying
-const API_BASE_URL = 'http://localhost:9001';
+// Uses environment variable for production, falls back to localhost for development
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:9001';
 
 // Fetch all products
 export const getProducts = async () => {

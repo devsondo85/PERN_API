@@ -10,7 +10,7 @@
 const express = require('express')
 const cors = require('cors')
 const app = express()
-const port = 9001
+const port = process.env.PORT || 9001
 const db = require('./queries')
 const path = require('path')
 
