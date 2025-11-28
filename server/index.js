@@ -1,3 +1,12 @@
+/**
+ * Express Server Setup
+ * 
+ * This file sets up the Express server, configures middleware,
+ * defines API routes, and serves the React frontend.
+ * 
+ * @module server
+ */
+
 const express = require('express')
 const cors = require('cors')
 const app = express()
@@ -5,8 +14,8 @@ const port = 9001
 const db = require('./queries')
 const path = require('path')
 
-// Middleware 
-app.use(cors()) // Enable CORS for all routes
+// Middleware Configuration
+app.use(cors()) // Enable CORS for all routes (allows frontend to access API)
 app.use(express.json()) // Parse JSON request bodies
 
 //CRUD - API Routes (must come BEFORE static files)
@@ -45,17 +54,20 @@ app.get('/inventory-logs/product/:productId', db.getInventoryLogsByProduct)
 //CREATE - create inventory log (also updates product quantity)
 app.post('/inventory-logs', db.createInventoryLog)
 
-//host react app as static files (must come AFTER API routes)
+// Serve React app as static files (must come AFTER API routes)
+// This allows the built React app to be served from the same server
 app.use(express.static(path.resolve(__dirname, '../client/build')))
 
-//Routes
+// Catch-all route: serve React app for any non-API routes
+// This enables client-side routing in React
 app.get('/', (req, res) => {
-    // we'll do some stuff here
     res.sendFile(path.resolve(__dirname, '../client/build', 'index.html'))
 })
     
-//starting express on our PORT
+// Start Express server on specified port
 app.listen(port, () => {
-    console.log(`the app is running on port ${port}.`)
+    console.log(`🚀 Server is running on port ${port}`)
+    console.log(`📡 API available at http://localhost:${port}`)
+    console.log(`🌐 Frontend available at http://localhost:${port}`)
 })
 

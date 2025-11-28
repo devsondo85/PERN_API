@@ -1,4 +1,14 @@
-// API service layer for backend communication
+/**
+ * API Service Layer
+ * 
+ * This module provides functions to interact with the backend API.
+ * All API calls are centralized here for easy maintenance and updates.
+ * 
+ * @module api
+ */
+
+// Base URL for the backend API
+// Update this to your production API URL when deploying
 const API_BASE_URL = 'http://localhost:9001';
 
 // Fetch all products

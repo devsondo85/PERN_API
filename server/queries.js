@@ -1,5 +1,13 @@
-// connect to prostgres ussing the node-postgres packagr
+/**
+ * Database Queries Module
+ * 
+ * This module handles all database operations for the inventory management system.
+ * Uses PostgreSQL with the node-postgres (pg) package for database connectivity.
+ * 
+ * @module queries
+ */
 
+// Connect to PostgreSQL using the node-postgres package
 const POOL = require('pg').Pool 
 
 const pool = new POOL({
@@ -10,9 +18,17 @@ const pool = new POOL({
     port: 5432,
 })
 
-//Create all the functions that will be our request handlers in our express server
+/**
+ * Create all the functions that will be our request handlers in our Express server.
+ * Each function handles a specific API endpoint and performs the corresponding database operation.
+ */
 
 // ========== CATEGORIES ==========
+/**
+ * Get all categories from the database
+ * @route GET /categories
+ * @returns {Array} Array of category objects
+ */
 const getCategories = (req, res) => {
     pool.query('SELECT * FROM categories ORDER BY name ASC', (error, results) => {
         if (error) {
@@ -90,6 +106,11 @@ const deleteCategory = (req, res) => {
 }
 
 // ========== PRODUCTS ==========
+/**
+ * Get all products with their category names
+ * @route GET /products
+ * @returns {Array} Array of product objects with category_name
+ */
 const getProducts = (req, res) => {
     pool.query(
         `SELECT p.*, c.name as category_name 
@@ -197,6 +218,11 @@ const deleteProduct = (req, res) => {
 }
 
 // ========== INVENTORY LOGS ==========
+/**
+ * Get all inventory logs with product names
+ * @route GET /inventory-logs
+ * @returns {Array} Array of inventory log objects
+ */
 const getInventoryLogs = (req, res) => {
     pool.query(
         `SELECT il.*, p.name as product_name 
