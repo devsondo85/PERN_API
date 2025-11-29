@@ -11,13 +11,27 @@
 const POOL = require('pg').Pool 
 
 // Database configuration with environment variable support for deployment
-const pool = new POOL({
-    user: process.env.DB_USER || 'me',
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'inventory_app',
-    password: process.env.DB_PASSWORD || 'password',
-    port: process.env.DB_PORT || 5432,
-})
+// Supports both DATABASE_URL (from Railway/Heroku) and individual variables
+let poolConfig;
+
+if (process.env.DATABASE_URL) {
+    // Use DATABASE_URL if provided (Railway, Heroku, etc.)
+    poolConfig = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    };
+} else {
+    // Use individual environment variables or defaults
+    poolConfig = {
+        user: process.env.DB_USER || 'me',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'inventory_app',
+        password: process.env.DB_PASSWORD || 'password',
+        port: process.env.DB_PORT || 5432,
+    };
+}
+
+const pool = new POOL(poolConfig)
 
 /**
  * Create all the functions that will be our request handlers in our Express server.
